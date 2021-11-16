@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>测试</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <style type="text/css">
+    *{
+      margin: 0;
+      padding: 0;
+    }
+    #content {
+      position: absolute;
+      overflow: hidden;
+      height: 100%;
+      width: 100%;
+    }
+    .draggable {
+      width: 120px;
+      height: 160px;
+      position: absolute;
+      transition: 0s ease all;
+    }
+
+    /* .draggable img {
+      height: 100%;
+      width: 100%;
+    } */
+  </style>
+  <script src="./Hammer.js"></script>
+</head>
+
+<body>
+  <div id="content">
+    <img id="img1" src="./1.jpeg" alt="">
+  </div>
+  <script type="text/javascript">
+    const content = document.querySelector('#content');
+    const clientWidth = document.documentElement.clientWidth-140;
+    const clientHeight = document.documentElement.clientHeight-180;
+
+    function getCss(curEle, attr) {
+      let val = null;
+      try {
+        val = window.getComputedStyle(curEle, null)[attr];
+      } catch (e) {
+        val = curEle.currentStyle[attr];
+      }
+
+      return parseFloat(val)
+    }
+    function point2D(x, y) {
+        return { x: x, y: y };
+    }
+    function CreateDraggable(path) {
+      const element = document.createElement('img');
+      // const img = document.createElement('img');
+      element.src = path
+      // element.appendChild(img)
+      element.className = "draggable"
+      element.style.right = '200px';
+      element.style.top = Math.ceil(Math.random() * (clientHeight)) + 'px';
+      return element
+    }
+
+    let zIndex = 1
+    function hammerInit(element) {
+      const hammer = new Hammer(element);
+
+      var tMatrix = [1, 0, 0, 1, 0, 0]//x缩放，无，无，y缩放，x平移，y平移
+      var initScale = 1;
+      var ticking = false
+      var poscenter = point2D(0, 0);//缓存双指的中心坐标
+      var lastTranslate = point2D(0, 0);//记录上次的偏移值
+      var lastcenter = point2D(element.offsetWidth / 2, element.offsetHeight / 2)//图像的中心点，用于对比双指中心点
+      var center = lastcenter
+
+      hammer.add(new Hammer.Pan({ threshold: 0, pointers: 1 }));
+      hammer.add(new Hammer.Pinch({ threshold: 0 }));
+      hammer.add(new Hammer.Tap({ event: 'doubletap', taps: 2 }));
+
+      hammer.on('doubletap', function (event) {
+        event.preventDefault();
+      });
+
+      hammer.on('tap', function (event) {
+        event.preventDefault();
+      });
+
+      hammer.on('panstart', function (event) {
+        event.preventDefault();
+        // element.style.zIndex = ++zIndex;
+        lastTranslate = point2D(tMatrix[4], tMatrix[5])//缓存上一次的偏移值
+      });
+      
+      hammer.on('panmove', (event) => {
+        event.preventDefault();
+        tMatrix[4] = lastTranslate.x + event.deltaX
+        tMatrix[5] = lastTranslate.y + event.deltaY
+        requestElementUpdate('onpan');
+      });
+
+      hammer.on('panend', (event) => {
+        event.preventDefault();
+      });
+
+      hammer.on('pinchstart', (event) => {
+        event.preventDefault();
+        lastTranslate = point2D(tMatrix[4], tMatrix[5])//记录上一次的偏移值
+        initScale = tMatrix[0] || 1;
+        poscenter = point2D(event.center.x, event.center.y)
+
+        lastcenter = point2D(center.x + lastTranslate.x, center.y + lastTranslate.y)//重新计算放大后的中心坐标
+        poscenter = point2D(event.center.x - lastcenter.x, event.center.y - lastcenter.y)
+        console.log("center", lastcenter.x, lastcenter.y)
+
+        requestElementUpdate('onpinchStart');
+
+      });
+
+
+
+      hammer.on('pinchmove', (event) => {
+        event.preventDefault();
+        var nowScale = tMatrix[0] = tMatrix[3] = initScale * event.scale;
+        var composscal = (1 - event.scale)
+        tMatrix[4] = (1 - event.scale) * poscenter.x + lastTranslate.x
+        tMatrix[5] = (1 - event.scale) * poscenter.y + lastTranslate.y
+        requestElementUpdate('onpinch');
+      })
+
+      hammer.on('pinchend', (event) => {
+        event.preventDefault();
+
+      });
+      function updateElementTransform() {
+        var tmp = tMatrix.join(',')
+        element.style.transform = 'matrix(' + tmp + ')';
+        ticking = false;
+      }
+
+      function requestElementUpdate() {
+        arguments && console.log(arguments[0])
+
+        if (!ticking) {
+          requestAnimationFrame(updateElementTransform);
+          ticking = true;
+        }
+      }
+
+
+      requestElementUpdate();
+    }
+      var el = document.getElementById("img1");//获取元素
+      hammerInit(el)
+    // const imgArray = ['./1.jpeg', './1.jpeg', './1.jpeg', './1.jpeg']
+    // const imgArray = ['./1.jpeg']
+    // let cursor = 0
+    // const imgArrayLen  = imgArray.length
+    // const timer = setInterval(() => {
+    //   if (cursor < imgArrayLen) {
+    //     const element = new CreateDraggable(imgArray[cursor])
+    //     content.appendChild(element);
+    //     hammerInit(element);
+    //     cursor++
+    //   } else {
+    //     clearInterval(timer)
+    //   }
+    // }, 0);
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>测试</title>
+  <meta charset="utf-8">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <style type="text/css">
+    *{
+      margin: 0;
+      padding: 0;
+    }
+    .draggable {
+      width: 60px;
+      height: 80px;
+      transition: 0s ease all;
+      position: absolute;
+      overflow: hidden;
+    }
+
+    .draggable img {
+      height: 100%;
+      width: 100%;
+    }
+  </style>
+  <script src="./Hammer.js"></script>
+</head>
+
+<body>
+  <div id="content"></div>
+  <script type="text/javascript">
+    function getCss(curEle, attr) {
+      let val = null;
+      try {
+        val = window.getComputedStyle(curEle, null)[attr];
+      } catch (e) {
+        val = curEle.currentStyle[attr];
+      }
+
+      return parseFloat(val)
+    }
+    let zIndex = 1
+    const selfHammer = {
+      START_X:0,
+      START_Y:0,
+      scaleVal:1,
+      init: function (objHammer, element) {
+        let status = false
+        let id = null
+        this.START_X = getCss(element, 'right')
+        this.START_Y = getCss(element, 'top')
+        const random = Math.ceil(Math.random())
+        function animation() {
+            if (getCss(element, 'left') + getCss(element, 'width') < 0) {
+              document.querySelector("#content").removeChild(element)
+            } else {
+              id = requestAnimationFrame(animation)
+            }
+            element.style.right = getCss(element, 'right') + random + 'px'
+        }
+        objHammer.add(new Hammer.Pan({ threshold: 0, pointers: 0 }));
+        objHammer.add(new Hammer.Swipe()).recognizeWith(objHammer.get('pan'));
+        objHammer.add(new Hammer.Pinch({ threshold: 0 })).recognizeWith([objHammer.get('pan'), objHammer.get('rotate')]);
+
+        objHammer.add(new Hammer.Tap({ event: 'doubletap', taps: 2 }));
+        objHammer.add(new Hammer.Tap());
+        objHammer.on('panstart', function (event) {
+          event.preventDefault();
+          element.style.zIndex = ++zIndex;
+        });
+        animation()
+        objHammer.on('press', function (event) {
+          event.preventDefault();
+          if(status) {
+            this.START_X = getCss(element, 'right'), this.START_Y = getCss(element, 'top');
+            animation()
+            status = false
+          }
+
+        });
+        objHammer.on('panstart tap',  (event)=> {
+          event.preventDefault();
+          if(id) {
+            this.START_X = getCss(element, 'right'), this.START_Y = getCss(element, 'top');
+            cancelAnimationFrame(id)
+            id=null
+            status = true
+          }
+        });
+      },
+      drag: function (objHammer, element) {
+        objHammer.on('panstart panmove',  (event)=> {
+          event.preventDefault();
+          element.style.right = this.START_X - event.deltaX + 'px';
+          element.style.top = this.START_Y + event.deltaY + 'px';
+        });
+        objHammer.on('panend',  (event)=> {
+          event.preventDefault();
+          this.START_X -= event.deltaX;
+          this.START_Y += event.deltaY;
+          console.log("START_X===" + this.START_X);
+          console.log("START_Y===" + this.START_Y)
+        });
+      },
+      setScale: function (objHammer, element) {
+        var initScale = 1;
+        var currentScale;
+        objHammer.on('pinchstart pinchmove ', (event)=> {
+          event.preventDefault();
+          console.log(currentScale);
+          currentScale = event.scale - 1;
+          currentScale = initScale + currentScale
+          this.scaleVal = currentScale;
+          element.style.transform = 'scale(' + this.scaleVal + ')';
+        });
+        objHammer.on('pinchend', function (event) {
+          event.preventDefault();
+          initScale = currentScale;
+        })
+      },
+      setoff: function (objHammer) {
+        objHammer.off("panstart panmove panend pinchstart pinchmove  pinchend pinchend")
+      }
+    }
+
+    var content = document.querySelector('#content');
+    var screenWidth = document.documentElement.clientWidth - 50;
+    var screenHeight = document.documentElement.clientHeight - 150;
+    function CreateDraggable() {
+      const element = document.createElement('div');
+      const img = document.createElement('img');
+      img.src = './1.jpeg'
+      element.appendChild(img)
+      element.className = "draggable"
+      element.style.right = '10px';
+      element.style.top = Math.ceil(Math.random() * screenHeight) + 'px';
+      return element
+    }
+
+    let count = 1
+    const timer = setInterval(() => {
+      if (count > 0) {
+        count--
+        const element = new CreateDraggable()
+        content.appendChild(element);
+        const hammer = new Hammer(element);//创建一个实例objHammer
+        selfHammer.init(hammer, element);//初始化
+        selfHammer.drag(hammer, element);//拖曳
+        selfHammer.setScale(hammer, element);//缩放
+      } else {
+        clearInterval(timer)
+      }
+    }, 1000);
+
+  </script>
+</body>
+
+</html>

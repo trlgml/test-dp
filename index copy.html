@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      border: none;
+      list-style: none;
+    }
+    #content {
+      position: absolute;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    #content div.draggable {
+      width: 60px;
+      height: 80px;
+      box-shadow: 0 0 10px #000;
+      position: absolute;
+    }
+
+    #content div.draggable img {
+      width: 100%;
+      height: 100%;
+    }
+
+    #content div.currentDraggable {
+      z-index: 99;
+    }
+  </style>
+  <script src="./interact.min.js"></script>
+</head>
+
+<body>
+  <div id="content">
+
+  </div>
+</body>
+<script>
+console.log(interact);
+  window.onload = function () {
+    var content = document.getElementById('content');
+    var screenWidth = document.documentElement.clientWidth - 50;
+    var screenHeight = document.documentElement.clientHeight - 150;
+
+    const style = document.styleSheets[0]
+    const movekeyframes = `@keyframes move{
+      0%{
+      }
+      100%{
+          transform: translate(${screenWidth}px);
+      }
+    }`
+    style.insertRule(movekeyframes, 0);
+
+    function Create(speed=30) {
+      const element = document.createElement('div');
+      const img = document.createElement('img');
+
+      let size = 2
+      let status = 1
+      img.src = './1.jpeg'
+      element.appendChild(img)
+      element.className = "draggable"
+      element.style.left = speed + 'px';
+      element.style.top = Math.ceil(Math.random() * screenHeight) + 'px';
+      // element.style.animationName = 'move';
+      // element.style.animationDuration = `${speed}s`;
+      // element.style.animationDelay = `linear`;
+      // element.style.animationIterationCount = 'infinite';
+      element.addEventListener('click', (e)=> {
+        if(status) {
+          status=0
+          // element.style.animationDuration = '0s';
+          // element.style.animationPlayState = 'paused'
+          // element.style.transform = `scale(${size}, ${size})`
+          // element.style.left = `${e.clientX}px`;
+          // element.className = 'item currentItem'
+        }
+      }, false)
+
+      // element.addEventListener('dblclick', (e) => {
+      //   if(!status) {
+      //     status = 1
+      //     // element.style.left = `${e.clientX}px`;
+      //     // element.style.animationDuration = `${speed}s`;
+      //     element.style.animationPlayState = 'running'
+      //     element.style.transform = 'scale(1, 1)'
+      //     element.className = 'img'
+      //   }
+      // }, false)
+
+      // element.addEventListener('mousewheel', (event, delta) => {
+      //   const dir = event.wheelDelta > 0 ? 'Up' : 'Down';
+      //   if (dir == 'Up') {
+      //     size = size + 0.1;
+      //     console.log("向上滑动");
+      //   } else {
+      //     size = size - 0.1;
+      //     if(size<1) {
+      //       size=1
+      //     }
+      //     console.log("向下滑动");
+      //   }
+      //   element.style.transform = `scale(${size}, ${size})`
+      //   event.preventDefault();
+      //   return false;
+      // }, false)
+
+      // document.body.addEventListener('mousewheel', (event, delta) => {
+      //   event.preventDefault();
+      //   return false;
+      // }, false)
+      return element
+    }
+    let count = 5
+    const timer = setInterval(() => {
+      if(count>0) {
+        count--
+        const speed = Math.ceil(Math.random() * 700)
+        const element = new Create(speed)
+        content.appendChild(element);
+      }else{
+        clearInterval(timer)
+      }
+    }, 1000);
+
+    interact('.draggable')
+      .draggable({
+        // enable inertial throwing
+        inertia: true,
+        // keep the element within the area of it's parent
+        modifiers: [
+          interact.modifiers.restrictRect({
+            restriction: 'parent',
+            endOnly: true
+          })
+        ],
+        // enable autoScroll
+        autoScroll: true,
+
+        listeners: {
+          // call this function on every dragmove event
+          move: dragMoveListener,
+
+          // call this function on every dragend event
+          end(event) {
+            var textEl = event.target.querySelector('p')
+
+            textEl && (textEl.textContent =
+              'moved a distance of ' +
+              (Math.sqrt(Math.pow(event.pageX - event.x0, 2) +
+                Math.pow(event.pageY - event.y0, 2) | 0))
+                .toFixed(2) + 'px')
+          }
+        }
+      })
+      .resizable({
+        edges: { top: true, left: true, bottom: true, right: true },
+        listeners: {
+          move: function (event) {
+            let { x, y } = event.target.dataset
+            event.target.style.zIndex='99'
+            x = (parseFloat(x) || 0) + event.deltaRect.left
+            y = (parseFloat(y) || 0) + event.deltaRect.top
+
+            Object.assign(event.target.style, {
+              width: `${event.rect.width}px`,
+              height: `${event.rect.height}px`,
+              transform: `translate(${x}px, ${y}px)`
+            })
+
+            Object.assign(event.target.dataset, { x, y })
+          }
+        }
+      })
+
+    function dragMoveListener(event) {
+      var target = event.target
+      // keep the dragged position in the data-x/data-y attributes
+      var x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx
+      var y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy
+
+      // translate the element
+      target.style.transform = 'translate(' + x + 'px, ' + y + 'px)'
+
+      // update the posiion attributes
+      target.setAttribute('data-x', x)
+      target.setAttribute('data-y', y)
+    }
+
+    // this function is used later in the resizing and gesture demos
+    window.dragMoveListener = dragMoveListener
+  }
+</script>
+
+
+
+</html>

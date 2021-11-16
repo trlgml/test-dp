@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+    <meta name="description" content="">
+    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
+      #item{
+        width: 200px;
+        height: 200px;
+        border: 1px solid red;
+        display: inline-block;
+        margin-top: 200px;
+        position: absolute;
+      }
+      body{
+        text-align: center;
+
+      }
+      .expand {
+        transform: scale(2.5);
+      }
+    </style>
+    <script src="./Hammer.js"></script>
+  </head>
+  <body>
+    <div id="item">
+123
+    </div>
+    <div id="scale">
+
+    </div>
+    <script>
+      // const option = {}
+      // const hammertime = new Hammer(document.querySelector('#item'), option);
+      // hammertime.get('pinch').set({ enable: true });
+      // hammertime.get('rotate').set({ enable: true });
+      // hammertime.get('pan').set({ direction: Hammer.DIRECTION_ALL });
+      // hammertime.get('swipe').set({ direction: Hammer.DIRECTION_VERTICAL });
+      // let str = ''
+      // function hander(ev) {
+      //   if(!str.includes(ev.type)) {
+      //     str += `【${ev.pointerType}:${ev.type}】`
+      //   }
+      //   ev.target.innerHTML  = str
+      //   if(ev.type === 'pinch') {
+      //     document.querySelector("#scale").innerHTML = ev.scale
+      //   }
+      // }
+      // // hammertime.on('tap', hander);
+      // // hammertime.on('tap', (ev) => {
+      // //   ev.target.classList.toggle('expand');
+      // // });
+      // hammertime.on('press', hander);
+      // // hammertime.on('pan', hander);
+      // hammertime.on('pan', (ev) => {
+      //   console.log(ev);
+      // });
+      // hammertime.on('swipe', hander);
+      // hammertime.on('pinch', hander);
+      // // hammertime.on('rotate', hander);
+      // var getCss = function (o, key) {
+      //   return o.currentStyle ? o.currentStyle[key] : document.defaultView.getComputedStyle(o, false)[key];
+      // };
+      var getCss = function (o, key) {
+        return o.currentStyle ? o.currentStyle[key] : document.defaultView.getComputedStyle(o, false)[key];
+      };
+      function drag(element) {
+        element.style.top = getCss(element, "top");
+        element.style.left = getCss(element, "left");
+        var hammer = new Hammer(element, { touchAction: 'pan-x pan-y' });//hammer实例
+        hammer.get('pinch').set({ enable: true });
+        var x = 0;
+        var y = 0;
+        hammer.on('panstart', function (event) {
+          x = parseInt(element.style.left);
+          y = parseInt(element.style.top);
+        });
+        hammer.on('panmove', function (event) {
+          element.style.top = y + event.deltaY + "px";
+          element.style.left = x + event.deltaX + "px";
+        });
+        hammer.on('panend', function (event) {
+
+        });
+
+        let posX = 0,
+          posY = 0,
+          scale = 1,
+          last_scale = 1,
+          last_posX = 0,
+          last_posY = 0,
+          max_pos_x = 0,
+          max_pos_y = 0,
+          transform = '';
+        const el = element;
+
+        hammer.on('panleft panright panup pandown tap press pdoubletap pan pinch panend pinchend', function (ev) {
+
+          console.log(ev.type + ' gesture detected.');
+
+          if (ev.type === 'doubletap') {
+            transform =
+              'translate3d(0, 0, 0) ' +
+              'scale3d(2, 2, 1) ';
+            scale = 2;
+            last_scale = 2;
+            try {
+              if (window.getComputedStyle(el, null).getPropertyValue('-webkit-transform').toString() !== 'matrix(1, 0, 0, 1, 0, 0)') {
+                transform =
+                  'translate3d(0, 0, 0) ' +
+                  'scale3d(1, 1, 1) ';
+                scale = 1;
+                last_scale = 1;
+              }
+            } catch (err) { }
+            // tslint:disable-next-line: deprecation
+            el.style.webkitTransform = transform;
+            transform = '';
+          }
+
+          // pan
+          if (scale !== 1) {
+            posX = last_posX + ev.deltaX;
+            posY = last_posY + ev.deltaY;
+            max_pos_x = Math.ceil((scale - 1) * el.clientWidth / 2);
+            max_pos_y = Math.ceil((scale - 1) * el.clientHeight / 2);
+            if (posX > max_pos_x) {
+              posX = max_pos_x;
+            }
+            if (posX < -max_pos_x) {
+              posX = -max_pos_x;
+            }
+            if (posY > max_pos_y) {
+              posY = max_pos_y;
+            }
+            if (posY < -max_pos_y) {
+              posY = -max_pos_y;
+            }
+          }
+
+
+          // pinch
+          if (ev.type === 'pinch') {
+            scale = Math.max(.999, Math.min(last_scale * (ev.scale), 4));
+          }
+          if (ev.type === 'pinchend') { last_scale = scale; }
+
+          // panend
+          if (ev.type === 'panend') {
+            last_posX = posX < max_pos_x ? posX : max_pos_x;
+            last_posY = posY < max_pos_y ? posY : max_pos_y;
+          }
+
+          if (scale !== 1) {
+            transform =
+              'translate3d(' + posX + 'px,' + posY + 'px, 0) ' +
+              'scale3d(' + scale + ', ' + scale + ', 1)';
+          }
+
+          if (transform) {
+            // tslint:disable-next-line: deprecation
+            el.style.webkitTransform = transform;
+          }
+        })
+
+      }
+      var myElement = document.querySelector('#item');
+      drag(myElement);
+    </script>
+  </body>
+</html>
