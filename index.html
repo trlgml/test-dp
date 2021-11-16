@@ -113,7 +113,6 @@
       hammer.on('pinchstart', (event) => {
         event.preventDefault();
         lastTranslate = point2D(tMatrix[4], tMatrix[5])//记录上一次的偏移值
-        console.log(lastTranslate);
         initScale = tMatrix[0] || 1;
         poscenter = point2D(event.center.x, event.center.y)
         lastcenter = point2D(center.x + lastTranslate.x, center.y + lastTranslate.y)//重新计算放大后的中心坐标
@@ -126,10 +125,11 @@
 
       hammer.on('pinchmove', (event) => {
         event.preventDefault();
-        let nowScale = tMatrix[0] = tMatrix[3] = initScale * event.scale;
-        let composscal = (1 - event.scale)
-        tMatrix[4] = composscal * poscenter.x + lastTranslate.x
-        tMatrix[5] = composscal * poscenter.y + lastTranslate.y
+        // let nowScale = 
+        tMatrix[0] = tMatrix[3] = initScale * event.scale;
+        // let composscal = (1 - event.scale)
+        // tMatrix[4] = composscal * poscenter.x + lastTranslate.x
+        // tMatrix[5] = composscal * poscenter.y + lastTranslate.y
         updateElementTransform();
       })
 
@@ -179,6 +179,8 @@
       cursor++
     }, 1000);
   </script>
+    <script src="http://cdn.jsdelivr.net/npm/eruda"></script>
+    <script>eruda.init()</script>
 </body>
 
 </html>
