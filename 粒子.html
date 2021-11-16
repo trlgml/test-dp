@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="">
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
+      .box_item {
+        margin: 5px;
+        position:absolute;
+        width:35px;
+        height:35px;
+        background-color:#F60;
+        transition:all 0.2s ease-in-out;
+      }
+      #box{
+        transition:all 3s ease-in-out;
+      }
+    </style>
+  </head>
+  <body>
+
+    <div id="box">
+<!-- <i class="matrix_i" style="left:'+x+'px;top:'+y+'px;"></i><b class="matrix_j" style="left:'+x+'px;top:'+y+'px;"></b> -->
+      <!-- <b class="matrix_j"></b> -->
+      <!-- <i class="matrix_i">
+      </i>
+      <b class="matrix_j"></b>
+      <i class="matrix_i">
+      </i>
+      <b class="matrix_j"></b> -->
+
+    </div>
+    <script>
+      const box = document.querySelector("#box")
+    const clientHeight = document.documentElement.clientHeight - 20;
+      let itemHtml = '';
+      for (var x = 0; x < 400; x += 40) {
+        for (var y = 0; y < 400; y += 40) {
+          // htmlMatrixI+= `<div class="box_item" data-left  = ${ x } data-top  = ${ y }  style="left: ${x}px;top:${y}px"></div>`
+          itemHtml+= `<div class="box_item" data-left  = ${ x } data-top  = ${ y } style="left: -100px;top:-100px"></div>`
+        }
+      }
+      box.innerHTML = itemHtml;
+
+      let box_item = box.querySelectorAll(".box_item");
+      let index_i = 0
+      let index_j = 0
+
+      var funStepMove = function () {
+        const current = box_item[index_i]
+        if (current) {
+          const left = current.getAttribute('data-left')
+          const top = current.getAttribute('data-top')
+          current.style.left = top + "px";
+          current.style.top = left + "px";
+          index_i++;
+          setTimeout(funStepMove, 100);
+        }else {
+          const current = box_item[index_j]
+          const random = Math.random() * 50
+          const rotateRandom = (Math.random() * 120)+20
+          if(current) {
+            // const left = current.getAttribute('data-left')
+            // const top = current.getAttribute('data-top')
+            current.style.top = clientHeight - random + "px";
+            current.style.transform = `rotate(${rotateRandom}deg)`
+            index_j++;
+            setTimeout(funStepMove, 100);
+          }
+        }
+      };
+
+      funStepMove()
+    </script>
+  </body>
+</html>

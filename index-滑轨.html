@@ -148,6 +148,8 @@
         hammer.on('panend', (event) => {
           event.preventDefault();
           START_X += event.deltaX;
+          let endLeft = getCss(element, 'left')
+            // element.style.left = Math.round(endLeft / itemWidth) * itemWidth + 'px';
           if(START_X<0) {
             START_X=0
           }
